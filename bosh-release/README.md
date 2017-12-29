@@ -32,9 +32,9 @@ This deploys API Manager and Analytics on 2 seperate VMs, and starts MySQL as a 
 
 	    $ cd pivotal-cf-apim/bosh-release/
         
-5. Run `deploy-all.sh` script. You will be asked for the superuser password in the middle.
+5. Run `deploy.sh` script. You will be asked for the superuser password in the middle.
 
-        $ ./deploy-all.sh
+        $ ./deploy.sh
         
     If everything goes successful, you will see something like this at the end.
     
@@ -65,7 +65,7 @@ This deploys API Manager and Analytics on 2 seperate VMs, and starts MySQL as a 
 
 <br />    
 
-## What happens inside deploy-all.sh:         
+## What happens inside deploy.sh:         
    
 1. Check if required binaries are available.
 
