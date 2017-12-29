@@ -17,7 +17,7 @@ APIM_NAME=wso2am-2.1.0
 ANALYTICS_NAME=wso2am-analytics-2.1.0
 APIM_PACK=wso2am-2.1.0.*.zip
 ANALYTICS_PACK=wso2am-analytics-2.1.0.*.zip
-JDK=jdk-8u144-linux-x64.tar.gz
+JDK=jdk-8u*-linux-x64.tar.gz
 MYSQL_DRIVER=mysql-connector-java-5.1.24-bin.jar
 
 if [ ! -f ../../$APIM_PACK ]; then
