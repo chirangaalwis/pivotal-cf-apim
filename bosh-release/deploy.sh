@@ -70,11 +70,11 @@ cp $APIM_PACK $APIM_NAME.zip
 cp $ANALYTICS_PACK $ANALYTICS_NAME.zip
 
 echo -e ">> Pulling MySQL docker image..."
-docker pull mysql/mysql-server:5.7
+docker pull mysql
 
 if [ ! "$(docker ps -q -f name=mysql-5.7)" ]; then
     echo -e ">> Starting MySQL docker container..."
-    container_id=$(docker run -d --name mysql-5.7 -p 3306:3306 -e MYSQL_ROOT_HOST=% -e MYSQL_ROOT_PASSWORD=$mysql_apim_password mysql/mysql-server:5.7)
+    container_id=$(docker run -d --name mysql-5.7 -p 3306:3306 -e MYSQL_ROOT_HOST=% -e MYSQL_ROOT_PASSWORD=$mysql_apim_password mysql)
     echo $container_id
     #detects the docker ip
     docker_ip=$(docker inspect $container_id | grep -w \"IPAddress\" | head -n 1 | cut -d '"' -f 4)
