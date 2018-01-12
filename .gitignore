@@ -6,4 +6,5 @@
 dev_releases/
 tile/product/**/*
 tile/release/**/*
-bosh-release/deployment/*
+bosh-release/deployment/
+bosh-release/dist/

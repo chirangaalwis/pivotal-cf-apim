@@ -27,25 +27,25 @@ APIM_PACK=wso2am-2.1.0.*.zip
 ANALYTICS_PACK=wso2am-analytics-2.1.0.*.zip
 JDK=jdk-8u144-linux-x64.tar.gz
 MYSQL_DRIVER=mysql-connector-java-5.1.34-bin.jar
-DEPLOYMENT_FOLDER=deployment
+DISTRIBUTIONS=dist
 
 # check the availability of required utility software, product packs and distributions
-if [ ! -f $DEPLOYMENT_FOLDER/$APIM_PACK ]; then
+if [ ! -f ${DISTRIBUTIONS}/${APIM_PACK} ]; then
     echo -e "---> APIM 2.1.0 pack not found!"
     exit 1
 fi
 
-if [ ! -f $DEPLOYMENT_FOLDER/$ANALYTICS_PACK ]; then
+if [ ! -f ${DISTRIBUTIONS}/${ANALYTICS_PACK} ]; then
     echo -e "---> APIM Analytics 2.1.0 pack not found!"
     exit 1
 fi
 
-if [ ! -f $DEPLOYMENT_FOLDER/$JDK ]; then
+if [ ! -f ${DISTRIBUTIONS}/${JDK} ]; then
     echo -e "---> JDK distribution (jdk-8u144-linux-x64.tar.gz) not found!"
     exit 1
 fi
 
-if [ ! -f $DEPLOYMENT_FOLDER/$MYSQL_DRIVER ]; then
+if [ ! -f ${DISTRIBUTIONS}/${MYSQL_DRIVER} ]; then
     echo -e "---> MySQL Driver (mysql-connector-java-5.1.34-bin.jar) not found!"
     exit 1
 fi
@@ -66,20 +66,20 @@ if [ "$1" == "--force" ]; then
 fi
 
 # move to the deployment directory
-cd $DEPLOYMENT_FOLDER
+cd ${DISTRIBUTIONS}
 
 APIM_PACK=$(ls wso2am-2.1.0.*.zip)
 ANALYTICS_PACK=$(ls wso2am-analytics-2.1.0.*.zip)
 
-cp $APIM_PACK $APIM_NAME.zip
-cp $ANALYTICS_PACK $ANALYTICS_NAME.zip
+cp ${APIM_PACK} ${APIM_NAME}.zip
+cp ${ANALYTICS_PACK} ${ANALYTICS_NAME}.zip
 
 current_path=`pwd`
 
 # extract the product database scripts
 if [ ! -d wso2am-2.1.0 ]; then
     echo -e "---> Extracting APIM 2.1.0 database scripts..."
-    unzip -q $APIM_PACK
+    unzip -q ${APIM_PACK}
 fi
 
 if [ ! "$(docker ps -q -f name=mysql-5.7)" ]; then
@@ -88,7 +88,7 @@ if [ ! "$(docker ps -q -f name=mysql-5.7)" ]; then
     docker_host_ip=$(/sbin/ifconfig docker0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')
 
     echo -e "---> Waiting for MySQL service to start on 3306..."
-    while ! nc -z $docker_host_ip 3306; do
+    while ! nc -z ${docker_host_ip} 3306; do
         sleep 1
         printf "."
     done
@@ -102,11 +102,11 @@ fi
 docker ps -a
 
 echo -e "---> Creating databases..."
-docker exec -it mysql-5.7 mysql -h$mysql_apim_host -u$mysql_apim_username -p$mysql_apim_password -e "DROP DATABASE IF EXISTS "$am_db"; DROP DATABASE IF EXISTS "$um_db"; DROP DATABASE IF EXISTS "$reg_db"; CREATE DATABASE "$am_db"; CREATE DATABASE "$um_db"; CREATE DATABASE "$reg_db";"
-docker exec -it mysql-5.7 mysql -h$mysql_analytics_host -u$mysql_analytics_username -p$mysql_analytics_password -e "DROP DATABASE IF EXISTS "$event_store_db"; DROP DATABASE IF EXISTS "$processed_data_db"; DROP DATABASE IF EXISTS "$stats_db"; CREATE DATABASE "$event_store_db"; CREATE DATABASE "$processed_data_db"; CREATE DATABASE "$stats_db";"
+docker exec -it mysql-5.7 mysql -h${mysql_apim_host} -u${mysql_apim_username} -p${mysql_apim_password} -e "DROP DATABASE IF EXISTS "${am_db}"; DROP DATABASE IF EXISTS "${um_db}"; DROP DATABASE IF EXISTS "${reg_db}"; CREATE DATABASE "${am_db}"; CREATE DATABASE "${um_db}"; CREATE DATABASE "${reg_db}";"
+docker exec -it mysql-5.7 mysql -h${mysql_analytics_host} -u${mysql_analytics_username} -p${mysql_analytics_password} -e "DROP DATABASE IF EXISTS "${event_store_db}"; DROP DATABASE IF EXISTS "${processed_data_db}"; DROP DATABASE IF EXISTS "${stats_db}"; CREATE DATABASE "${event_store_db}"; CREATE DATABASE "${processed_data_db}"; CREATE DATABASE "${stats_db}";"
 
 echo -e "---> Creating tables..."
-docker exec -it mysql-5.7 mysql -h$mysql_apim_host -u$mysql_apim_username -p$mysql_apim_password -e "USE "$am_db"; SOURCE /dbscripts/apimgt/mysql5.7.sql; USE "$um_db"; SOURCE /dbscripts/mysql5.7.sql; USE "$reg_db"; SOURCE /dbscripts/mysql5.7.sql;"
+docker exec -it mysql-5.7 mysql -h${mysql_apim_host} -u${mysql_apim_username} -p${mysql_apim_password} -e "USE "${am_db}"; SOURCE /dbscripts/apimgt/mysql5.7.sql; USE "${um_db}"; SOURCE /dbscripts/mysql5.7.sql; USE "${reg_db}"; SOURCE /dbscripts/mysql5.7.sql;"
 
 if [ ! -d bosh-deployment ]; then
     echo -e "---> Cloning https://github.com/cloudfoundry/bosh-deployment..."
@@ -158,10 +158,10 @@ bosh -e vbox login --client=admin --client-secret=$(bosh int vbox/creds.yml --pa
 
 cd ..
 echo -e "---> Adding blobs..."
-bosh -e vbox add-blob $DEPLOYMENT_FOLDER/jdk-8u144-linux-x64.tar.gz oraclejdk/jdk-8u144-linux-x64.tar.gz
-bosh -e vbox add-blob $DEPLOYMENT_FOLDER/$MYSQL_DRIVER mysqldriver/$MYSQL_DRIVER
-bosh -e vbox add-blob $DEPLOYMENT_FOLDER/wso2am-2.1.0.zip wso2apim/wso2am-2.1.0.zip
-bosh -e vbox add-blob $DEPLOYMENT_FOLDER/wso2am-analytics-2.1.0.zip wso2apim_analytics/wso2am-analytics-2.1.0.zip
+bosh -e vbox add-blob ${DISTRIBUTIONS}/jdk-8u144-linux-x64.tar.gz oraclejdk/jdk-8u144-linux-x64.tar.gz
+bosh -e vbox add-blob ${DISTRIBUTIONS}/${MYSQL_DRIVER} mysqldriver/${MYSQL_DRIVER}
+bosh -e vbox add-blob ${DISTRIBUTIONS}/wso2am-2.1.0.zip wso2apim/wso2am-2.1.0.zip
+bosh -e vbox add-blob ${DISTRIBUTIONS}/wso2am-analytics-2.1.0.zip wso2apim_analytics/wso2am-analytics-2.1.0.zip
 
 echo -e "---> Uploading blobs..."
 bosh -e vbox -n upload-blobs
@@ -174,18 +174,18 @@ bosh -e vbox upload-release
 
 if [ ! -f bosh-stemcell-3445.7-warden-boshlite-ubuntu-trusty-go_agent.tgz ]; then
     echo -e "---> Stemcell does not exist! Downloading..."
-    wget https://s3.amazonaws.com/bosh-core-stemcells/warden/bosh-stemcell-3445.7-warden-boshlite-ubuntu-trusty-go_agent.tgz
+    wget --directory-prefix=${DISTRIBUTIONS} https://s3.amazonaws.com/bosh-core-stemcells/warden/bosh-stemcell-3445.7-warden-boshlite-ubuntu-trusty-go_agent.tgz
 fi
 
 echo -e "---> Uploading Stemcell..."
-bosh -e vbox upload-stemcell bosh-stemcell-3445.7-warden-boshlite-ubuntu-trusty-go_agent.tgz
+bosh -e vbox upload-stemcell ${DISTRIBUTIONS}/bosh-stemcell-3445.7-warden-boshlite-ubuntu-trusty-go_agent.tgz
 
 echo -e "---> Deploying bosh release..."
 yes | bosh -e vbox -d wso2apim deploy wso2apim-manifest.yml
 
 os_name=`uname`
 echo -e "---> Adding route to bosh lite VM..."
-if [[ "$os_name" == 'Darwin' ]]; then
+if [[ "${os_name}" == 'Darwin' ]]; then
     sudo route add -net 10.244.0.0/16 192.168.50.6 
 else
     sudo route add -net 10.244.0.0/16 gw 192.168.50.6
